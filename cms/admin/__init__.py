@@ -16,9 +16,29 @@ def content(type):
     else:
         abort(404)
 
-@admin_bp.route('/create/<type>')
+@admin_bp.route('/create/<type>', methods=('GET', 'POST'))
 def create(type):
     if requested_type(type):
+        if request.method == "POST":
+            title = request.form["title"]
+            slug = request.form["slug"]
+            type_id = request.form["type_id"]
+            body = request.form["body"]
+            error = None
+
+            if not title:
+                error = 'The title is required.'
+            elif not type:
+                error = 'The type is required.'
+
+            if error is None:
+                content = Content(title=title, slug=slug, type_id=type_id, body=body)
+                db.session.add(content)
+                db.session.commit()
+                return redirect(url_for('content', type=type))
+
+            flash(error)
+            
         types = Type.query.all()
         return render_template('admin/content_form.html', title='Create', types=types, type_name=type)
     else:
