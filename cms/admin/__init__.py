@@ -38,11 +38,38 @@ def create(type):
                 return redirect(url_for('content', type=type))
 
             flash(error)
-            
+
         types = Type.query.all()
         return render_template('admin/content_form.html', title='Create', types=types, type_name=type)
     else:
         abort(404)
+
+@app.route('/admin/edit/<id>', methods=('GET', 'POST'))
+def edit(id):
+    content = Content.query.get_or_404(id)
+    type = Type.query.get(request.form["type_id"])
+
+    if request.method == "POST":
+        content.title = request.form["title"]
+        content.slug = request.form["slug"]
+        content.type_id = request.form["type_id"]
+        content.body = request.form["body"]
+        content.updated_at = datetime.utcnow()
+        error = None
+
+        if not request.form["title"]:
+            error = 'The title is required.'
+
+        if error is None:
+            db.session.commit()
+            return redirect(url_for('content', type=type.name))
+
+        flash(error)
+
+    types = Type.query.all()
+    return render_template('admin/content_form.html',
+        types=types, title='Edit', item_title=content.title,
+        slug=content.slug, type_name=type.name, type_id=content.type_id, body=content.body)
 
 @admin_bp.route('/users')
 def users():
