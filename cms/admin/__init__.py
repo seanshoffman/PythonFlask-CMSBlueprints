@@ -44,7 +44,7 @@ def create(type):
     else:
         abort(404)
 
-@app.route('/admin/edit/<id>', methods=('GET', 'POST'))
+@admin_bp.route('/admin/edit/<id>', methods=('GET', 'POST'))
 def edit(id):
     content = Content.query.get_or_404(id)
     type = Type.query.get(request.form["type_id"])
