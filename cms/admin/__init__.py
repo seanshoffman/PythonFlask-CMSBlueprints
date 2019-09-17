@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint
+from flask import Flask, render_template, redirect, url_for, abort, Blueprint
 from cms.admin.models import Content, Setting, Type, User
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin', template_folder='templates')
