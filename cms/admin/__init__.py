@@ -47,8 +47,9 @@ def create(type):
 @admin_bp.route('/admin/edit/<id>', methods=('GET', 'POST'))
 def edit(id):
     content = Content.query.get_or_404(id)
-    type = Type.query.get(request.form["type_id"])
-
+    type = Type.query.get(content.type_id)
+    types = Type.query.all()
+    
     if request.method == "POST":
         content.title = request.form["title"]
         content.slug = request.form["slug"]
@@ -66,7 +67,7 @@ def edit(id):
 
         flash(error)
 
-    types = Type.query.all()
+    
     return render_template('admin/content_form.html',
         types=types, title='Edit', item_title=content.title,
         slug=content.slug, type_name=type.name, type_id=content.type_id, body=content.body)
