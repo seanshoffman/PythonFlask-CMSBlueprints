@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulma.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('admin.static', filename='css/bulma.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('admin.static', filename='css/admin/dashboard.css') }}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   </head>
   <body>
@@ -24,12 +24,12 @@
           <div class="menu">
             <p class="menu-label">Administration</p>
             <ul class="menu-list">
-              <li><a href="{{ url_for('content', type='page') }}">Pages</a></li>
-              <li><a href="{{ url_for('content', type='post') }}">Posts</a></li>
-              <li><a href="{{ url_for('content', type='partial') }}">Partials</a></li>
-              <li><a href="{{ url_for('content', type='template') }}">Templates</a></li>
-              <li><a href="{{ url_for('users') }}">Users</a></li>
-              <li><a href="{{ url_for('settings') }}">Settings</a></li>
+              <li><a href="{{ url_for('admin.content', type='page') }}">Pages</a></li>
+              <li><a href="{{ url_for('admin.content', type='post') }}">Posts</a></li>
+              <li><a href="{{ url_for('admin.content', type='partial') }}">Partials</a></li>
+              <li><a href="{{ url_for('admin.content', type='template') }}">Templates</a></li>
+              <li><a href="{{ url_for('admin.users') }}">Users</a></li>
+              <li><a href="{{ url_for('admin.settings') }}">Settings</a></li>
             </ul>
           </div>
         </div>
