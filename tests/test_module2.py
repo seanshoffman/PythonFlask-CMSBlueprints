@@ -133,9 +133,14 @@ def test_template_buttons_module2():
     assert submit_exists, \
         'Have you added an `<input>` with the correct attributes to the first `is-grouped` control `<div>`?'
 
-    cancel_exists = len(content_form_template.select('a.button.is-text')) == 1
+    cancel_el = content_form_template.select('a.button.is-text')
+    cancel_exists = len(cancel_el) == 1
     assert cancel_exists, \
         'Have you added an `<a>` with the correct attributes to the second `is-grouped` control `<div>`?'
+
+    a_contents = (cancel_el[0].contents[0]).lower() == 'cancel'
+    assert a_contents, \
+        'Does your cancel link contain the word `Cancel`?'
 
     links = 'admin.content:type:type_name' in template_functions('content_form', 'url_for')
     assert links, \
@@ -145,6 +150,16 @@ def test_template_buttons_module2():
 def test_create_route_methods_module2():
     assert admin_module_exists, \
         'Have you created the `cms/admin/__init__.py` file?'
+
+    flask_import = admin_module_code().find('from_import', lambda node: node.value[0].value == 'flask')
+    flask_import_exits = flask_import  is not None
+    assert flask_import_exits, \
+        'Do you have an import from `flask` statement?'
+    from_flask_imports = list(flask_import.targets.find_all('name_as_name').map(lambda node: node.value ))
+    request_import = 'request' in from_flask_imports
+    assert request_import, \
+        'Are you importing `request` from `flask` in `cms/admin/__init__.py`?'
+
     strings = list(get_methods_keyword('create').find_all('string').map(lambda node: node.value.replace("'", '"')))
     methods_exist = '"GET"' in strings and '"POST"' in strings
     assert methods_exist, \
@@ -240,6 +255,21 @@ def test_create_route_insert_data_module2():
     assert content_count, \
         'Are you passing the correct number of keyword arguments to the `Content` instance?'
 
+    module_import = admin_module_code().find('from_import', lambda node: \
+        node.find('name', value='models'))
+    module_import_exists =  module_import is not None
+    assert module_import_exists, \
+        'Are you importing the correct methods and classes from `cms.admin.models`?'
+    model_path = list(module_import.find_all('name').map(lambda node: node.value))
+    import_path = module_import is not None and ':'.join(model_path) == 'cms:admin:models'
+    assert import_path, \
+        'Are you importing the correct methods and classes from `cms.admin.models` in `cms/__init__.py`?'
+
+    name_as_name_db = module_import.find('name_as_name', value='db') is not None
+    assert name_as_name_db, \
+        'Are you importing the `db` SQLAlchemy instance from `cms.admin.models` in `admin/cms/__init__.py`?'
+
+
     add_call = error_check_if.find('atomtrailers', lambda node: \
         node.value[0].value == 'db' and \
         node.value[1].value == 'session' and \
@@ -263,6 +293,19 @@ def test_create_route_insert_data_module2():
 def test_create_route_redirect_module2():
     assert admin_module_exists, \
         'Have you created the `cms/admin/__init__.py` file?'
+
+    flask_import = admin_module_code().find('from_import', lambda node: node.value[0].value == 'flask')
+    flask_import_exits = flask_import  is not None
+    assert flask_import_exits, \
+        'Do you have an import from `flask` statement?'
+    from_flask_imports = list(flask_import.targets.find_all('name_as_name').map(lambda node: node.value ))
+    redirect_import = 'redirect' in from_flask_imports
+    assert redirect_import, \
+        'Are you importing `redirect` from `flask` in `cms/admin/__init__.py`?'
+    url_for_import = 'url_for' in from_flask_imports
+    assert url_for_import, \
+        'Are you importing `url_for` from `flask` in `cms/admin/__init__.py`?'
+
     error_check = get_request_method('create').find('comparison', lambda node: \
         'error' in [str(node.first), str(node.second)])
     error_check_exists = error_check is not None and error_check.parent.type == 'if' and \
@@ -296,7 +339,7 @@ def test_create_route_redirect_module2():
     assert url_type, \
         'Are you passing a `type` keyword argument set to `type` to the `url_for()` function?'
 
-    flash_exists = get_request_method('create').find_all('atomtrailers', lambda node: \
+    flash_exists = get_request_method('create').find('atomtrailers', lambda node: \
         node.value[0].value == 'flash' and \
         node.value[1].type == 'call' and \
         node.value[1].value[0].value.value == 'error') is not None
@@ -307,11 +350,12 @@ def test_create_route_redirect_module2():
 def test_edit_route_module2():
     assert admin_module_exists, \
         'Have you created the `cms/admin/__init__.py` file?'
-    accept_id = get_route('edit').find('def_argument', lambda node: node.target.value == 'id') is not None
+    accept_id = get_route('edit')\
+        .find('def_argument', lambda node: node.target.value == 'id') is not None
     assert accept_id, \
         'Is the `edit` route function accepting an argument of `id`?'
 
-    content = get_route('edit').find('assign', lambda node: node.target.value == 'content') is not None
+    content = get_route('edit').find('assign', lambda node: node.target.value == 'content')
     content_exists = content is not None
     assert content_exists, \
         'Are you setting the `content` variable correctly?'
@@ -450,7 +494,7 @@ def test_template_populate_form_controls_module2():
     assert content_exists, \
         'Is the `content.html` file in the `admin/templates` folder?'
 
-    content_url_for = 'admin.edit:id:item.id' in template_functions('content', 'url_for')
+    content_url_for = 'url_for.admin.edit.id.item.id.None.None' in get_calls('content')
     assert content_url_for, \
         'Do you have an `href` with a call to `url_for` pointing to `admin.edit` passing in `id=item.id`?'
 
@@ -462,13 +506,15 @@ def test_edit_route_form_data_module2():
     post_check = str(get_request_method('edit', False)).find('POST')
     assert post_check, \
         'Are you testing if the request method is `POST`?'
+    try:
+        get_form_data('edit', 'content.title')
+        get_form_data('edit', 'content.slug')
+        get_form_data('edit', 'content.type_id')
+        get_form_data('edit', 'content.body')
+    except:
+        assert False, 'Are you setting all proprties of the `content` object correctly?'
 
-    get_form_data('edit', 'content.title')
-    get_form_data('edit', 'content.slug')
-    get_form_data('edit', 'content.type_id')
-    get_form_data('edit', 'content.body')
-
-    content_updated_at = get_request_method(route).find('assign', lambda node: \
+    content_updated_at = get_request_method('edit').find('assign', lambda node: \
         str(node.target) == 'content.updated_at')
     content_updated_at_exists = content_updated_at is not None
     assert content_updated_at_exists, \
@@ -556,7 +602,7 @@ def test_edit_route_update_data_module2():
     assert url_type, \
         'Are you passing a `type` keyword argument set to `type.name` to the `url_for()` function?'
 
-    flash_exists = get_request_method('create').find_all('atomtrailers', lambda node: \
+    flash_exists = get_request_method('create').find('atomtrailers', lambda node: \
         node.value[0].value == 'flash' and \
         node.value[1].type == 'call' and \
         node.value[1].value[0].value.value == 'error') is not None
